@@ -2,8 +2,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys, random, csv, json, os, serial
-import modules.settings, modules.CreateGraph, modules.airEvacuation, modules.SaveData
-
+import modules.settings, modules.CreateGraph, modules.airEvacuation, modules.SaveData, modules.keyboard
 
 class Window(QtWidgets.QMainWindow):
 
@@ -24,6 +23,7 @@ class Window(QtWidgets.QMainWindow):
         
         self.workFolder = ''
         
+        os.system('sudo chmod 777 /dev/ttyUSB0')
         self.openArduinoPort()
         
         self.InitWindow()
@@ -462,7 +462,14 @@ class Window(QtWidgets.QMainWindow):
         self.settingswindow = modules.settings.SettingsWindow()
         self.settingswindow.cigaretteTypeSignal.connect(self.receiveTypeSignal)
         self.settingswindow.resetHolderSignal.connect(self.resetHolderPosition)
+        self.settingswindow.ExpTimeSignal.connect(self.ExpTimeSignalReceiver)
         self.settingswindow.showFullScreen()
+        
+    def ExpTimeSignalReceiver(self, time):
+        try:
+            self.ser.write(b''.join('h' + str(time) + ' \n'))
+        except:
+            pass
         
     def resetHolderPosition(self, go):
         if go == 'reset':

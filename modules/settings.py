@@ -1,11 +1,13 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys, json
+import modules.keyboard
 
 class SettingsWindow(QtWidgets.QDialog):
     
     cigaretteTypeSignal = QtCore.pyqtSignal(str)
     resetHolderSignal = QtCore.pyqtSignal(str)
+    ExpTimeSignal = QtCore.pyqtSignal(str)
     
     def __init__(self):
         super().__init__()
@@ -107,12 +109,24 @@ class SettingsWindow(QtWidgets.QDialog):
         self.ExperimentNameLabel.setObjectName("ExperimentNameLabel")
         self.ExperimentNameLabel.setText("Deney İsmi : ")
         MainInputArea.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.ExperimentNameLabel)
+        
+        firstHLayout = QtWidgets.QHBoxLayout()
+        firstHLayout.setObjectName("firstHLabout")
 		
         self.ExperimentNameLineEdit = QtWidgets.QLineEdit(self)
         self.ExperimentNameLineEdit.setObjectName("ExperimentNameLineEdit")
         self.ExperimentNameLineEdit.setPlaceholderText("*Tarih-Deney İsmi")
         self.ExperimentNameLineEdit.textChanged.connect(self.ExperimentInfoUpdate)
-        MainInputArea.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.ExperimentNameLineEdit)
+        firstHLayout.addWidget(self.ExperimentNameLineEdit)
+        
+        self.keyboardButton = QtWidgets.QPushButton(self)
+        self.keyboardButton.setObjectName("keyboardButton")
+        self.keyboardButton.setText("")
+        self.keyboardButton.setIcon(QtGui.QIcon("./icons/keyboardicon.png"))
+        self.keyboardButton.clicked.connect(self.showMehKeyboard)
+        firstHLayout.addWidget(self.keyboardButton)
+        
+        MainInputArea.setLayout(0, QtWidgets.QFormLayout.FieldRole, firstHLayout)
 		
 		#Second line with index 1 starts here
         self.CigaretteTypeLabel = QtWidgets.QLabel(self)
@@ -148,46 +162,6 @@ class SettingsWindow(QtWidgets.QDialog):
 		#ButtonsHLayout End ===========================================
 		
 		#Third line with index 2 starts here
-        self.EnterSpeedLabel = QtWidgets.QLabel(self)
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(12)
-        font.setBold(False)
-        font.setWeight(50)
-        font.setKerning(True)
-        self.EnterSpeedLabel.setFont(font)
-        self.EnterSpeedLabel.setObjectName("EnterSpeedLabel")
-        self.EnterSpeedLabel.setText("Dumanın Kabine Giriş Hızı : ")
-        MainInputArea.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.EnterSpeedLabel)
-		
-		#QHBoxLayout created to insert multiple objects inside QFormLayout's FieldRole ----------
-        self.EnterSpeedHLayout = QtWidgets.QHBoxLayout()
-        self.EnterSpeedHLayout.setObjectName("EnterSpeedHLayout")
-
-        self.EnterSpeedLineEdit = QtWidgets.QLineEdit(self)
-        self.EnterSpeedLineEdit.setObjectName("EnterSpeedLineEdit")
-        self.EnterSpeedLineEdit.setPlaceholderText("*Lütfen tam sayı olarak girin")
-        self.EnterSpeedHLayout.addWidget(self.EnterSpeedLineEdit)
-		
-        self.EnterSpeedUnitLabel = QtWidgets.QLabel(self)
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(12)
-        font.setBold(False)
-        font.setWeight(50)
-        font.setKerning(True)
-        self.EnterSpeedUnitLabel.setFont(font)
-        self.EnterSpeedUnitLabel.setObjectName("EnterSpeedUnitLabel")
-        self.EnterSpeedUnitLabel.setText("cm<sup>3</sup> / dakika")
-        self.EnterSpeedHLayout.addWidget(self.EnterSpeedUnitLabel)
-		
-        EnterSpeedSpacer = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.EnterSpeedHLayout.addItem(EnterSpeedSpacer)
-
-        MainInputArea.setLayout(2, QtWidgets.QFormLayout.FieldRole, self.EnterSpeedHLayout)
-		#EnterSpeedHLayout End -----------------
-		
-		#Fourth line with index 3 starts here
         self.StayTimeLabel = QtWidgets.QLabel(self)
         font = QtGui.QFont()
         font.setFamily("Arial")
@@ -205,6 +179,8 @@ class SettingsWindow(QtWidgets.QDialog):
         self.StayTimeHLayout.setObjectName("StayTimeHLayout")
 		
         self.StayTimeLineEdit = QtWidgets.QLineEdit(self)
+        validator = QtGui.QIntValidator(0, 360, self)
+        self.StayTimeLineEdit.setValidator(validator)
         self.StayTimeLineEdit.setInputMethodHints(QtCore.Qt.ImhNone)
         self.StayTimeLineEdit.setObjectName("StayTimeLineEdit")
         self.StayTimeLineEdit.setPlaceholderText("*Lütfen tam sayı olarak girin")
@@ -222,52 +198,19 @@ class SettingsWindow(QtWidgets.QDialog):
         self.StayTimeUnitLabel.setObjectName("StayTimeUnitLabel")
         self.StayTimeUnitLabel.setText("dakika")
         self.StayTimeHLayout.addWidget(self.StayTimeUnitLabel)
+        
+        self.keyboardButton2 = QtWidgets.QPushButton(self)
+        self.keyboardButton2.setObjectName("keyboardButton2")
+        self.keyboardButton2.setText("")
+        self.keyboardButton2.setIcon(QtGui.QIcon("./icons/keyboardicon.png"))
+        self.keyboardButton2.clicked.connect(self.showMehKeyboard2)
+        self.StayTimeHLayout.addWidget(self.keyboardButton2)
 		
         StayTimeSpacer = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.StayTimeHLayout.addItem(StayTimeSpacer)
 		
         MainInputArea.setLayout(3, QtWidgets.QFormLayout.FieldRole, self.StayTimeHLayout)
 		#StayTimeHLayout End ===================
-		
-		#Fifth line with index 4 starts here
-        self.AirTimeLabel = QtWidgets.QLabel(self)
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(12)
-        font.setBold(False)
-        font.setWeight(50)
-        font.setKerning(True)
-        self.AirTimeLabel.setFont(font)
-        self.AirTimeLabel.setObjectName("AirTimeLabel")
-        self.AirTimeLabel.setText("Kabinin Havalandırma Zamanı : ")
-        MainInputArea.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.AirTimeLabel)
-		
-		#QHBoxLayout created to insert multiple objects inside QFormLayout's FieldRole ------------------
-        AirTimeHLayout = QtWidgets.QHBoxLayout()
-        AirTimeHLayout.setObjectName("AirTimeHLayout")
-		
-        self.AirTimeLineEdit = QtWidgets.QLineEdit(self)
-        self.AirTimeLineEdit.setObjectName("AirTimeLineEdit")
-        self.AirTimeLineEdit.setPlaceholderText("*Lütfen tam sayı olarak girin")
-        AirTimeHLayout.addWidget(self.AirTimeLineEdit)
-		
-        self.AirTimeUnitLabel = QtWidgets.QLabel(self)
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(12)
-        font.setBold(False)
-        font.setWeight(50)
-        font.setKerning(True)
-        self.AirTimeUnitLabel.setFont(font)
-        self.AirTimeUnitLabel.setObjectName("AirTimeUnitLabel")
-        self.AirTimeUnitLabel.setText("dakika")
-        AirTimeHLayout.addWidget(self.AirTimeUnitLabel)
-		
-        AirTimeSpacer = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        AirTimeHLayout.addItem(AirTimeSpacer)
-
-        MainInputArea.setLayout(4, QtWidgets.QFormLayout.FieldRole, AirTimeHLayout)
-		#AirTimeHLayout End -------------------------
         
         #Sixth line with index 5 starts here
         self.resetHolderLabel = QtWidgets.QLabel(self)
@@ -328,9 +271,7 @@ class SettingsWindow(QtWidgets.QDialog):
             with open("settings.json", "r") as Settings_File:
                 user_settings = json.load(Settings_File)
             self.ExperimentNameLineEdit.setText(user_settings['Experiment_Name'])
-            self.EnterSpeedLineEdit.setText(user_settings['Enter_Speed'])
             self.StayTimeLineEdit.setText(user_settings['Stay_Time'])
-            self.AirTimeLineEdit.setText(user_settings['Air_Time'])
             if user_settings['Cigarette_Type'] == 'Normal':
                 self.NormalTypeButton.setChecked(True)
                 self.selected_button = 'Normal'
@@ -357,7 +298,7 @@ class SettingsWindow(QtWidgets.QDialog):
     def SaveAndReturn(self):
 		#To save settings, we open a JSON file and write our settings in there
         with open("settings.json", "w") as Settings_File:
-            data = { 'Experiment_Name' : self.ExperimentNameLineEdit.text(), 'Cigarette_Type' : self.selected_button, 'Enter_Speed' : self.EnterSpeedLineEdit.text(), 'Stay_Time' : self.StayTimeLineEdit.text(), 'Air_Time' : self.AirTimeLineEdit.text() }
+            data = { 'Experiment_Name' : self.ExperimentNameLineEdit.text(), 'Cigarette_Type' : self.selected_button, 'Stay_Time' : self.StayTimeLineEdit.text()}
             json.dump(data, Settings_File, indent = 4)
             
         if self.selected_button == 'IQOS':
@@ -365,12 +306,35 @@ class SettingsWindow(QtWidgets.QDialog):
         elif self.selected_button == 'Normal':
             self.cigaretteTypeSignal.emit('normal')
         
+        self.ExpTimeSignal.emit(self.StayTimeLineEdit.text())
+        
         self.close()
 		
     def HelpWindow(self):
         message = "Deney ismi girdisinin Tarih-Deney İsmi-Sigara Tipi şeklinde olması beklenmektedir. \
                     Diğer girdilerin sayı olması beklenmektedir. "
         QtWidgets.QMessageBox.about(self, "Yardım", message)
+        
+    def showMehKeyboard(self):
+        self.keyboard = modules.keyboard.keyboardWindow()
+        self.keyboard.textToReturn.connect(self.textReturned)
+        self.keyboard.showFullScreen()
+        
+    def showMehKeyboard2(self):
+        self.keyboard = modules.keyboard.keyboardWindow()
+        self.keyboard.textToReturn.connect(self.textReturned2)
+        self.keyboard.showFullScreen()
+        
+    def textReturned(self, text):
+        self.ExperimentNameLineEdit.setText(text)
+        
+    def textReturned2(self, text):
+        try:
+            int(text)
+            self.StayTimeLineEdit.setText(text)
+        except:
+            QtWidgets.QMessageBox.about(self, "Dikkat!", 'Lütfen tam sayı giriniz!')
+            self.showMehKeyboard2()
     
 if __name__ == "__main__":
     App = QApplication(sys.argv)

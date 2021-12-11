@@ -25,6 +25,7 @@ Kodu güncelleyip indexleri ayarlamayı unutma!
 
 =====Kodun çalışması için gerekli izinler
 Eğer arduino port'u için chmod 777 komutu yapılmışsa, kod normal kullanıcı için de çalışır haldedir, yapılmadıysa root izni gerekir
+Eğer port değişiyorsa, kodun içinde __init__ teki os.system kodunu ve openArduinoPort içindeki path'i değişmeyi unutma!
 
 -------------There is an error ?--------------
 
