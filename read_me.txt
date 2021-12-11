@@ -14,6 +14,8 @@ herşeyi durdurmak için "a".
 sistemi kapanmadan önce "e".
 sigara tutucu (holder) ' ın sıfır konumunu sıfırlama "f".
 holder'ı çıkart "j".
+kaç sigara içileceği ayarı "y" + str(number) 
+deney süresi "h" + str(time) 
 
 =====LCD monitör verileri nasıl okunuyor ?
 Arduino belirli aralıklar ile buffer'a sensör verilerini yazıyor

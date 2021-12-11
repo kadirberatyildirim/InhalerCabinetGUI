@@ -27,6 +27,8 @@ class Window(QtWidgets.QMainWindow):
         self.workPath = ''
         
         self.InitWindow()
+        
+        self.createDeneylerFolder()
 		
 		#Timers for data collection, label checking and auto save
         self.portTimer = QtCore.QTimer(self)
@@ -383,31 +385,43 @@ class Window(QtWidgets.QMainWindow):
         except:
             pass
         
+    def createDeneylerFolder(self):
+        if os.path.isdir('/home/pi/Desktop/Deneyler'):
+            pass
+        else:
+            os.mkdir('/home/pi/Desktop/Deneyler')
+        
     def startStopExp(self):
         sender1 = self.sender()
         if sender1.text() == 'Deneyi Başlat':
-            try:
-                self.workPath = '/home/pi/Desktop/' + self.ExperimentLineEdit.text()
-                os.mkdir(self.workPath)
-                
+            if self.ser.isOpen() == True and os.path.isdir('/home/pi/Desktop/Deneyler' + self.ExperimentLineEdit.text()) == False:
                 try:
                     self.ser.write(b'd \n')
                     
-                    self.TemperatureValues = []
-                    self.OxyValues = []
-                    self.COValues = []
-                    self.HumidityValues = []
-                    self.CO2Values = []
-                    
-                    self.startExpButton.setText('Deneyi Bitir')
-                    self.startExpButton.setIcon(QtGui.QIcon("./icons/terminateicon.png"))
-                    
+                    try:
+                        self.workPath = '/home/pi/Desktop/Deneyler/' + self.ExperimentLineEdit.text()
+                        os.mkdir(self.workPath)
+                        
+                        self.TemperatureValues = []
+                        self.OxyValues = []
+                        self.COValues = []
+                        self.HumidityValues = []
+                        self.CO2Values = []
+                        
+                        self.startExpButton.setText('Deneyi Bitir')
+                        self.startExpButton.setIcon(QtGui.QIcon("./icons/terminateicon.png"))
+                        
+                    except FileExistsError:
+                        QtWidgets.QMessageBox.about(self, "Dikkat", 'Yeni bir çalışma alanı yapın.')
+                        
                 except:
                     QtWidgets.QMessageBox.about(self, "Dikkat", 'Bağlı arduino bulunamadı. Lütfen sistemi kontrol ediniz.')
                     
-            except FileExistsError:
+            elif os.path.isdir('/home/pi/Desktop/Deneyler' + self.ExperimentLineEdit.text()) == True:
                 QtWidgets.QMessageBox.about(self, "Dikkat", 'Yeni bir çalışma alanı yapın.')
-            
+                
+            elif self.ser.isOpen() == False:
+                QtWidgets.QMessageBox.about(self, "Dikkat", 'Bağlı arduino bulunamadı. Lütfen sistemi kontrol ediniz.')
                 
         elif sender1.text() == 'Deneyi Bitir':
             self.workPath = ''
@@ -468,11 +482,18 @@ class Window(QtWidgets.QMainWindow):
         self.settingswindow.cigaretteTypeSignal.connect(self.receiveTypeSignal)
         self.settingswindow.resetHolderSignal.connect(self.resetHolderPosition)
         self.settingswindow.ExpTimeSignal.connect(self.ExpTimeSignalReceiver)
+        self.settingswindow.HowManyCigarettes.connect(self.HowManyCigs)
         self.settingswindow.showFullScreen()
+        
+    def HowManyCigs(self, number):
+        try:
+            self.ser.write(b''.join('y' + str(number) + '\n'))
+        except:
+            pass
         
     def ExpTimeSignalReceiver(self, time):
         try:
-            self.ser.write(b''.join('h' + str(time) + ' \n'))
+            self.ser.write(b''.join('h' + str(time) + '\n'))
         except:
             pass
         

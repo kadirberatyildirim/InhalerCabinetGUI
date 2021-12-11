@@ -8,6 +8,7 @@ class SettingsWindow(QtWidgets.QDialog):
     cigaretteTypeSignal = QtCore.pyqtSignal(str)
     resetHolderSignal = QtCore.pyqtSignal(str)
     ExpTimeSignal = QtCore.pyqtSignal(str)
+    HowManyCigarettes = QtCore.pyqtSignal(str)
     
     def __init__(self):
         super().__init__()
@@ -212,6 +213,45 @@ class SettingsWindow(QtWidgets.QDialog):
         MainInputArea.setLayout(3, QtWidgets.QFormLayout.FieldRole, self.StayTimeHLayout)
 		#StayTimeHLayout End ===================
         
+        #Third line with index 2 starts here
+        self.numberOfCigsLabel = QtWidgets.QLabel(self)
+        font = QtGui.QFont()
+        font.setFamily("Arial")
+        font.setPointSize(12)
+        font.setBold(False)
+        font.setWeight(50)
+        font.setKerning(True)
+        self.numberOfCigsLabel.setFont(font)
+        self.numberOfCigsLabel.setObjectName("StayTimeLabel")
+        self.numberOfCigsLabel.setText("Kaç Sigara içilecek : ")
+        MainInputArea.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.numberOfCigsLabel)
+		
+		#QHBoxLayout created to insert multiple objects inside QFormLayout's FieldRole ===============
+        self.numberOfCigsHLayout = QtWidgets.QHBoxLayout()
+        self.numberOfCigsHLayout.setObjectName("StayTimeHLayout")
+		
+        self.numberOfCigsLineEdit = QtWidgets.QLineEdit(self)
+        validator = QtGui.QIntValidator(0, 360, self)
+        self.numberOfCigsLineEdit.setValidator(validator)
+        self.numberOfCigsLineEdit.setInputMethodHints(QtCore.Qt.ImhNone)
+        self.numberOfCigsLineEdit.setObjectName("StayTimeLineEdit")
+        self.numberOfCigsLineEdit.setPlaceholderText("*Lütfen tam sayı olarak girin")
+		#self.StayTimeLineEdit.setValidator(self, QtGui.QIntValidator)
+        self.numberOfCigsHLayout.addWidget(self.numberOfCigsLineEdit)
+        
+        self.keyboardButton3 = QtWidgets.QPushButton(self)
+        self.keyboardButton3.setObjectName("keyboardButton2")
+        self.keyboardButton3.setText("")
+        self.keyboardButton3.setIcon(QtGui.QIcon("./icons/keyboardicon.png"))
+        self.keyboardButton3.clicked.connect(self.showMehKeyboard3)
+        self.numberOfCigsHLayout.addWidget(self.keyboardButton3)
+		
+        numberOfCigsSpacer = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.numberOfCigsHLayout.addItem(numberOfCigsSpacer)
+		
+        MainInputArea.setLayout(4, QtWidgets.QFormLayout.FieldRole, self.numberOfCigsHLayout)
+		#StayTimeHLayout End ===================
+        
         #Sixth line with index 5 starts here
         self.resetHolderLabel = QtWidgets.QLabel(self)
         font = QtGui.QFont()
@@ -272,6 +312,7 @@ class SettingsWindow(QtWidgets.QDialog):
                 user_settings = json.load(Settings_File)
             self.ExperimentNameLineEdit.setText(user_settings['Experiment_Name'])
             self.StayTimeLineEdit.setText(user_settings['Stay_Time'])
+            self.numberOfCigsLineEdit.setText(user_settings['Cigarette_Number'])
             if user_settings['Cigarette_Type'] == 'Normal':
                 self.NormalTypeButton.setChecked(True)
                 self.selected_button = 'Normal'
@@ -298,7 +339,7 @@ class SettingsWindow(QtWidgets.QDialog):
     def SaveAndReturn(self):
 		#To save settings, we open a JSON file and write our settings in there
         with open("settings.json", "w") as Settings_File:
-            data = { 'Experiment_Name' : self.ExperimentNameLineEdit.text(), 'Cigarette_Type' : self.selected_button, 'Stay_Time' : self.StayTimeLineEdit.text()}
+            data = { 'Experiment_Name' : self.ExperimentNameLineEdit.text(), 'Cigarette_Type' : self.selected_button, 'Stay_Time' : self.StayTimeLineEdit.text(), 'Cigarette_Number' : self.numberOfCigsLineEdit.text()}
             json.dump(data, Settings_File, indent = 4)
             
         if self.selected_button == 'IQOS':
@@ -325,6 +366,11 @@ class SettingsWindow(QtWidgets.QDialog):
         self.keyboard.textToReturn.connect(self.textReturned2)
         self.keyboard.showFullScreen()
         
+    def showMehKeyboard3(self):
+        self.keyboard = modules.keyboard.keyboardWindow()
+        self.keyboard.textToReturn.connect(self.textReturned3)
+        self.keyboard.showFullScreen()
+        
     def textReturned(self, text):
         self.ExperimentNameLineEdit.setText(text)
         
@@ -335,6 +381,14 @@ class SettingsWindow(QtWidgets.QDialog):
         except:
             QtWidgets.QMessageBox.about(self, "Dikkat!", 'Lütfen tam sayı giriniz!')
             self.showMehKeyboard2()
+            
+    def textReturned3(self, text):
+        try:
+            int(text)
+            self.numberOfCigsLineEdit.setText(text)
+        except:
+            QtWidgets.QMessageBox.about(self, "Dikkat!", 'Lütfen tam sayı giriniz!')
+            self.showMehKeyboard3()
     
 if __name__ == "__main__":
     App = QApplication(sys.argv)
