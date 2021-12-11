@@ -21,10 +21,10 @@ class Window(QtWidgets.QMainWindow):
         self.HumidityValues = []
         self.CO2Values = []
         
-        self.workFolder = ''
-        
         os.system('sudo chmod 777 /dev/ttyUSB0')
         self.openArduinoPort()
+        
+        self.workPath = ''
         
         self.InitWindow()
 		
@@ -39,7 +39,7 @@ class Window(QtWidgets.QMainWindow):
 		
         self.AutoSaveTimer = QtCore.QTimer(self)
         self.AutoSaveTimer.start(300000)
-        self.CheckForLabelTimer.timeout.connect(self.AutoSave)
+        self.AutoSaveTimer.timeout.connect(self.AutoSave)
 		
     def InitWindow(self):
         self.setWindowIcon(QtGui.QIcon("./icons/mouseicon.png"))
@@ -386,10 +386,10 @@ class Window(QtWidgets.QMainWindow):
     def startStopExp(self):
         sender1 = self.sender()
         if sender1.text() == 'Deneyi Başlat':
-            self.workFolder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Bir çalışma klasörü oluşturun ve seçin', '/home')
-            if self.workFolder == '':
-                QtWidgets.QMessageBox.about(self, "Dikkat", 'Lütfen uygun bir çalışma alanı seçin')
-            else:
+            try:
+                self.workPath = '/home/pi/Desktop/' + self.ExperimentLineEdit.text()
+                os.mkdir(self.workPath)
+                
                 try:
                     self.ser.write(b'd \n')
                     
@@ -401,15 +401,20 @@ class Window(QtWidgets.QMainWindow):
                     
                     self.startExpButton.setText('Deneyi Bitir')
                     self.startExpButton.setIcon(QtGui.QIcon("./icons/terminateicon.png"))
+                    
                 except:
                     QtWidgets.QMessageBox.about(self, "Dikkat", 'Bağlı arduino bulunamadı. Lütfen sistemi kontrol ediniz.')
+                    
+            except FileExistsError:
+                QtWidgets.QMessageBox.about(self, "Dikkat", 'Yeni bir çalışma alanı yapın.')
+            
                 
         elif sender1.text() == 'Deneyi Bitir':
+            self.workPath = ''
             try:
                 self.ser.write(b'a \n')
                 
                 self.AutoSave()
-                self.workFolder = ''
                 
                 self.startExpButton.setText('Deneyi Başlat')
                 self.startExpButton.setIcon(QtGui.QIcon("./icons/starticon.png"))
@@ -506,7 +511,7 @@ class Window(QtWidgets.QMainWindow):
     def AutoSave(self):
         try:
             fieldnames = ['Sicaklik', 'Nem', 'Oksijen Yüzdesi', 'Karbonmonoksit Yüzdesi', 'Karbondioksit Yüzdesi']
-            with open (self.workFolder + '/Auto Save ' + self.ExperimentLineEdit.text() + '.csv', 'w', newline='') as myfile:
+            with open (self.workPath + '/Auto Save.csv', 'w', newline='') as myfile:
                 wr = csv.writer(myfile)
                 wr.writerow(fieldnames)
                 for i in range(0, len(self.OxyValues)):
